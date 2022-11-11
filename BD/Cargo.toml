@@ -1,0 +1,11 @@
+[package]
+name = "dbTest"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sqlx = { version = "0.6.2", features = [  "runtime-async-std-native-tls", "mysql" ] }
+async-std = { version = "1", features = [ "attributes" ] }
+dotenv = "0.15.0"
