@@ -1,12 +1,13 @@
 use sqlx::mysql::MySqlPoolOptions;
 use dotenv::dotenv;
-use std::io;
-//use std::io::*;
+use std::io::{self, Write};
+use std::fs::File;
+use std::io::Read;
 
 //datos en base de datos deben de ser NOT NULL para evitar usar Option
 #[allow(dead_code)]
 #[derive(Debug)]
-struct File{
+struct Archivo{
     id:i32,
     filename:String,
 }
@@ -14,7 +15,9 @@ struct File{
 #[allow(dead_code)]
 #[derive(Debug)]
 struct file_p{
+    fileName:String,
     filePath:String,
+    extension:String,
 }
 
 #[async_std::main]
@@ -63,11 +66,11 @@ async fn main() -> Result<(), sqlx::Error>
     File contiene ID de archivo y su nombre
     ¿cómo hacer para que solo se imprima datos sin some? */
     println!("Mostrando archivos disponibles:");
-    let files: Vec<File> = 
-        sqlx::query_as!(File, r"select id, filename from files")
+    let files: Vec<Archivo> = 
+        sqlx::query_as!(Archivo, r"select id, filename from files")
         .fetch_all(&pool)
         .await?;
-    println!("{:?}", files);
+    println!("{:#?}", files);
 
     //Pidiendo a usuario ID de documento
     println!("Inserta el ID del documento que quieres recuperar:");
@@ -78,12 +81,31 @@ async fn main() -> Result<(), sqlx::Error>
     //ruta se tiene que guardar en un struct...creo.
     println!("Recuperando documento...");
     let f_path = sqlx::query_as!(file_p,
-        "select filePath from files where id = ?", id_select)
+        "select fileName, filePath, extension from files where id = ?", id_select)
         .fetch_one(&pool)
         .await?;
     
     println!("Ruta del archivo: {}", f_path.filePath);
 
-    //Se busca documento y se envía...
+    /*Una vez que tengamos ruta, abrimos documento y se convierte a bytes, que
+    se almacenan como Vec<u8>. Ese vector de datos binarios es el que se envía
+    por medio de UDP. Cuando el cliente recibe datos, los vuelve a guardar en un 
+    documento.*/
+    let mut data = Vec::new();
+    let mut f = File::open(f_path.filePath).expect("No se puede abrir el archivo");
+    f.read_to_end(&mut data).expect("No se puede leer el archivo.");
+    let mut new_path = String::new();
+    //Pedimos a usuario insertar nueva ubicación donde se va a guardar archivo
+    println!("Inserta la ruta en donde se guardará el archivo:");
+    let b2 = std::io::stdin().read_line(&mut new_path).unwrap();
+    //Ahora que ya tenemos nueva ruta, lo juntamos con nombre de archivo y extensión
+    let mut new_path = String::new();
+    new_path.push_str(&f_path.fileName);
+    new_path.push_str(&f_path.extension);
+    //Creamos el archivo en el disco del cliente
+    let mut fw = File::create(new_path).expect("No se puede crear archivo");
+    //Guardamos el vector de bytes en el archivo
+    fw.write_all(&data).expect("No se puede crear archivo");
+
     Ok(())
 }
