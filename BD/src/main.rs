@@ -1,5 +1,7 @@
 use sqlx::mysql::MySqlPoolOptions;
 use dotenv::dotenv;
+use std::io;
+//use std::io::*;
 
 //datos en base de datos deben de ser NOT NULL para evitar usar Option
 #[allow(dead_code)]
@@ -7,6 +9,12 @@ use dotenv::dotenv;
 struct File{
     id:i32,
     filename:String,
+}
+
+#[allow(dead_code)]
+#[derive(Debug)]
+struct file_p{
+    filePath:String,
 }
 
 #[async_std::main]
@@ -54,12 +62,28 @@ async fn main() -> Result<(), sqlx::Error>
     /*Todas las entradas se guardan en un vector que guarda el struct File
     File contiene ID de archivo y su nombre
     ¿cómo hacer para que solo se imprima datos sin some? */
+    println!("Mostrando archivos disponibles:");
     let files: Vec<File> = 
         sqlx::query_as!(File, r"select id, filename from files")
         .fetch_all(&pool)
         .await?;
     println!("{:?}", files);
-    Ok(())
 
+    //Pidiendo a usuario ID de documento
+    println!("Inserta el ID del documento que quieres recuperar:");
+    let mut id_select = String::new();
+    let b1 = std::io::stdin().read_line(&mut id_select).unwrap();
+
+    //Pasando ID de documento a BD, debería regresar ruta de documento
+    //ruta se tiene que guardar en un struct...creo.
+    println!("Recuperando documento...");
+    let f_path = sqlx::query_as!(file_p,
+        "select filePath from files where id = ?", id_select)
+        .fetch_one(&pool)
+        .await?;
     
+    println!("Ruta del archivo: {}", f_path.filePath);
+
+    //Se busca documento y se envía...
+    Ok(())
 }
