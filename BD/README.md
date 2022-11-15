@@ -3,8 +3,8 @@
 El programa [main.rs](/BD/src/main.rs) es un ejemplo de las implementación de las funciones que se usaran para usar la base de datos en el sistema cliente servidor.
 
 Se asume que el sistema en el que se ejecuta tiene las siguientes características:
--MariaDB instalado
--Base de datos creada después de ejecutar el archivo createDB.sql
+- MariaDB instalado
+- Base de datos creada después de ejecutar el archivo createDB.sql
 
 Este código utiliza el *crate* `sqlx` que permite la conectividad con la base de datos. Se debe de incluir en el archivo `Cargo.toml` del proyecto, como se ve [aquí.](Cargo.toml). Además de incluirlo allí, se incluye en el programa con `use sqlx::mysql::MySqlPoolOptions;`.
 
