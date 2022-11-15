@@ -78,7 +78,6 @@ async fn main() -> Result<(), sqlx::Error>
     //Se le quita el newline a la ruta
     new_path.pop();
     //Ahora que ya tenemos nueva ruta, lo juntamos con nombre de archivo y extensión
-    //Por ahora no copia la extensión. Intentar corregir.
     let mut v = vec![new_path,"/".to_string(),f_path.fileName,f_path.extension];
     //println!("{:#?}", v);
     let s: String = v.concat();
