@@ -1,3 +1,10 @@
 # cliente_servidor_rust
 
-## Una vez terminado las partes correspondientes, e subira un archivo para que todos colaboremos, y lo que modifiquen lo comentan aqui
+## Para que pueda funcionar el archivo, se modifica el archivo Cargo.toml agregando unas dependencias.
+
+```
+  [dependencies]
+  mysql = "*"
+  chrono = "0.4"
+
+```
