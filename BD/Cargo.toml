@@ -9,3 +9,5 @@ edition = "2021"
 sqlx = { version = "0.6.2", features = [  "runtime-async-std-native-tls", "mysql" ] }
 async-std = { version = "1", features = [ "attributes" ] }
 dotenv = "0.15.0"
+bincode = "1.3.3"
+serde = { version = "1.0.147", features = ["derive"] }

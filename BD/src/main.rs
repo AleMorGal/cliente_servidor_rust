@@ -3,17 +3,18 @@ use dotenv::dotenv;
 use std::io::{self, Write};
 use std::fs::File;
 use std::io::Read;
+use serde::{Deserialize, Serialize};
 
 //datos en base de datos deben de ser NOT NULL para evitar usar Option
 #[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Archivo{
     id:i32,
     filename:String,
 }
 
 #[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct file_p{
     fileName:String,
     filePath:String,
@@ -48,7 +49,13 @@ async fn main() -> Result<(), sqlx::Error>
         sqlx::query_as!(Archivo, r"select id, filename from files")
         .fetch_all(&pool)
         .await?;
-    println!("{:#?}", files);
+    //println!("{:#?}", files);
+    
+    //se convierte vec de Archivo en u8
+    let encoded: Vec<u8> = bincode::serialize(&files).unwrap();
+    //se decodifica y se guarda en un vec de archivos
+    let decoded: Vec<Archivo>= bincode::deserialize(&encoded).unwrap();
+    println!("{:#?}", decoded);
 
     //Pidiendo a usuario ID de documento
     println!("Inserta el ID del documento que quieres recuperar:");
