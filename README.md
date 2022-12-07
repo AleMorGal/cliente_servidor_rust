@@ -11,7 +11,8 @@
   # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
   [dependencies]
-  mysql = "*"
-  chrono = "0.4"
-
+ mysql = "*"
+chrono = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+bincode = "1.2.1"
 ```
