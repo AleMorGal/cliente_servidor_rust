@@ -10,14 +10,28 @@ use bincode;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Product {
-    id: u64,
-    nombre: String,
+    id: i32,
+    filename: String,
 }
 
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Mensaje{
-	contenido: Vec<Product>,
+	confirmacion: Option<bool>,
+  	palabra_busqueda: Option<String>,
+	contenido: Option<Vec<Product>>,
+  	archivo: Option<Vec<u8>>,
+}
+
+impl Mensaje{
+  fn new(confirmacion: bool, palabra_busqueda: String, contenido: Vec<Product>, archivo: Vec<u8>) -> Mensaje {
+    Mensaje{
+      confirmacion: Some(confirmacion),
+      palabra_busqueda: Some(palabra_busqueda),
+      contenido: Some(contenido),
+      archivo: Some(archivo),
+    }
+  }
 }
 
 
@@ -92,9 +106,9 @@ fn main(){
 	println!("{:}", "=".repeat(80));
 	let msgRecibido = listen(net::SocketAddr::V4(send_addr));
 	println!("mensaje recibido: {:?}", msgRecibido);
-	let mut vecMensaje = msgRecibido.contenido; //Sacamos el contenido del mensaje, que es un vector de Product
+	let mut vecMensaje = msgRecibido.contenido.unwrap(); //Sacamos el contenido del mensaje, que es un vector de Product
 	for i in vecMensaje.iter_mut() { //Realizamos iteraciones para sacar los items de la base de datos
-		println!("id es {} y el nombre es {}", i.id, i.nombre);
+		println!("id es {} y el nombre es {}", i.id, i.filename);
 	}
 	println!("{:}", "=".repeat(80));
 }
