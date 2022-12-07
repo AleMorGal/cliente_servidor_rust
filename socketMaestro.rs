@@ -15,6 +15,8 @@ use bincode;
 pub struct Product {
     id: i32,
     filename: String,
+	  filePath: String,
+	  extensiom: String,
 }
 
 
