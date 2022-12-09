@@ -43,7 +43,7 @@ impl Mensaje{
 }
 
 pub fn encontrarArchivos(conn: &mut PooledConn, id: i32) -> std::result::Result<Vec<Product>, mysql::error::Error> {
-    conn.exec_map("select id, filename, filePath from files where id =:id_busqueda",
+    conn.exec_map("select id, filename, filePath, extension from files where id =:id_busqueda",
         params! {
             "id_busqueda" => id,
         },
