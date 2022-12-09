@@ -1,6 +1,8 @@
 use mysql::*;
 use mysql::prelude::*;
 use chrono::prelude::*;
+use std::fs::File;
+use std::io::Read;
 use std::net;
 use std::io;
 //~ use std::io::*;
@@ -13,37 +15,55 @@ use bincode;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Product {
-    id: u64,
-    nombre: String,
+    id: i32,
+    filename: String,
+    filePath: String,
+    extension: String,
 }
 
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Mensaje{
-	
-	contenido: Vec<Product>,
+	confirmacion: Option<bool>,
+  palabra_busqueda: Option<String>,
+	contenido: Option<Vec<Product>>,
+  archivo: Option<Vec<u8>>,
+}
+
+#[allow(dead_code)]
+impl Mensaje{
+  fn new(confirmacion: bool, palabra_busqueda: String, contenido: Vec<Product>, archivo: Vec<u8>) -> Mensaje {
+    Mensaje{
+      confirmacion: Some(confirmacion),
+      palabra_busqueda: Some(palabra_busqueda),
+      contenido: Some(contenido),
+      archivo: Some(archivo),
+    }
+  }
 }
 
 pub fn encontrarArchivos(conn: &mut PooledConn, id: i32) -> std::result::Result<Vec<Product>, mysql::error::Error> {
-    conn.exec_map("select id, nombre from prueba1 where id =:id_busqueda",
+    conn.exec_map("select id, filename, filePath from files where id =:id_busqueda",
         params! {
             "id_busqueda" => id,
         },
-        |(id,nombre)| Product {
+        |(id,filename, filePath, extension)| Product {
             id: id,
-            nombre: nombre
+            filename: filename,
+            filePath: filePath,
+            extension: extension,
         }
     )
 }
 
-pub fn insertarDatos(conn: &mut PooledConn, id: i32, nombre: String) -> std::result::Result<u64, mysql::error::Error>{
+/*pub fn insertarDatos(conn: &mut PooledConn, id: i32, nombre: String) -> std::result::Result<u64, mysql::error::Error>{
 	conn.exec_drop("insert into prueba1 (id,nombre) values (:id, :nombre);",
 		params! {
 			"id" => id,
 			"nombre" => nombre,
 		},
 	).and_then(|_| Ok(conn.last_insert_id()))
-}
+}*/
 
 fn socket(listen_on: net::SocketAddr) -> net::UdpSocket {
   let attempt = net::UdpSocket::bind(listen_on);
@@ -102,7 +122,7 @@ pub fn listen(listen_on: net::SocketAddr) -> String {
 
 fn main() {
 	//~ Seccion de base de datos
-	let url = "mysql://admin:xd@localhost:3306/prueba";
+	let url = "mysql://root:root@localhost:3306/udp_server_client";
 	let pool = Pool::new(url).unwrap();
 	//~ let mut conn = pool.get_conn().unwrap();
 	
@@ -133,14 +153,20 @@ fn main() {
 			let mut vecResultados = Vec::new();
 			resultadosBD.map(|lista| {
 				for elemento in lista {
-					println!("Found product {}, {}", elemento.id,elemento.nombre);
+					println!("Found product {}, {}, {}, {}", elemento.id,elemento.filename, elemento.filePath, elemento.extension);
 					vecResultados.push(elemento);
 				}
 			});
-			
-			let m = Mensaje{contenido: vecResultados};
+      let mut data_encoded= Vec::new();
+      /*for i in vecResultados.iter_mut(){
+        let mut f = File::open(i.filePath.clone()).expect("No se puede abrir el archivo");
+        f.read_to_end(&mut data_encoded).expect("No se puede convertir el archivo");
+      }
+      //f.read_to_end(&mut data_encoded).expect("No se puede convertir el archivo");*/
+			let m = Mensaje{confirmacion: Some(true), palabra_busqueda: None, contenido: Some(vecResultados), archivo: Some(data_encoded)};
 			let codigo_serializado = bincode::serialize(&m).unwrap();
 			send_message(net::SocketAddr::V4(my_dir), net::SocketAddr::V4(send_dir), codigo_serializado);
+
 			
 		});
 		println!("{:}", "=".repeat(80));
