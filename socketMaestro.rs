@@ -1,6 +1,8 @@
 use mysql::*;
 use mysql::prelude::*;
 use chrono::prelude::*;
+use std::fs::File;
+use std::io::Read;
 use std::net;
 use std::io;
 //~ use std::io::*;
@@ -10,13 +12,14 @@ use std::str;
 use std::{thread, time::Duration};
 use serde::{Serialize, Deserialize};
 use bincode;
+use std::fs;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Product {
     id: i32,
     filename: String,
-	  filePath: String,
-	  extensiom: String,
+    filePath: String,
+    extension: String,
 }
 
 
@@ -41,13 +44,15 @@ impl Mensaje{
 }
 
 pub fn encontrarArchivos(conn: &mut PooledConn, id: i32) -> std::result::Result<Vec<Product>, mysql::error::Error> {
-    conn.exec_map("select id, filename from files where id =:id_busqueda",
+    conn.exec_map("select id, filename, filePath, extension from files where id =:id_busqueda",
         params! {
             "id_busqueda" => id,
         },
-        |(id,filename)| Product {
+        |(id,filename, filePath, extension)| Product {
             id: id,
-            filename: filename
+            filename: filename,
+            filePath: filePath,
+            extension: extension,
         }
     )
 }
@@ -149,14 +154,20 @@ fn main() {
 			let mut vecResultados = Vec::new();
 			resultadosBD.map(|lista| {
 				for elemento in lista {
-					println!("Found product {}, {}", elemento.id,elemento.filename);
+					println!("Found product {}, {}, {}, {}", elemento.id,elemento.filename, elemento.filePath, elemento.extension);
 					vecResultados.push(elemento);
 				}
 			});
-			
-			let m = Mensaje{confirmacion: None, palabra_busqueda: None, contenido: Some(vecResultados), archivo: None};
+      let mut data_encoded = String::new();
+      for i in vecResultados.iter_mut(){
+        let mut f = File::open(i.filePath.clone()).expect("No se puede abrir el archivo");
+        f.read_to_end(&mut data_encoded).expect("No se puede convertir el archivo");
+
+      }
+			let m = Mensaje{confirmacion: Some(true), palabra_busqueda: None, contenido: Some(vecResultados), archivo: Some(data_encoded)};
 			let codigo_serializado = bincode::serialize(&m).unwrap();
 			send_message(net::SocketAddr::V4(my_dir), net::SocketAddr::V4(send_dir), codigo_serializado);
+
 			
 		});
 		println!("{:}", "=".repeat(80));

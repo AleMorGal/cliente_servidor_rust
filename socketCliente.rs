@@ -1,3 +1,4 @@
+use std::fs::File;
 use std::{thread, time::Duration};
 use std::net;
 use std::io;
@@ -12,8 +13,8 @@ use bincode;
 pub struct Product {
     id: i32,
     filename: String,
-	filePath: String,
-	extensiom: String,
+    filePath: String,
+    extension: String,
 }
 
 
@@ -111,6 +112,13 @@ fn main(){
 	let mut vecMensaje = msgRecibido.contenido.unwrap(); //Sacamos el contenido del mensaje, que es un vector de Product
 	for i in vecMensaje.iter_mut() { //Realizamos iteraciones para sacar los items de la base de datos
 		println!("id es {} y el nombre es {}", i.id, i.filename);
+		let mut new_path = String::new();
+		println!("Inserta la ruta en donde se guardará el archivo:");
+		std::io::stdin().read_line(&mut new_path).unwrap();
+		new_path.pop();
+		let mut v = vec![new_path,"/".to_string(),i.filename.clone(),i.extension.clone()];
+		let s: String = v.concat();
+		let mut fw = File::create(s).expect("No se puede crear archivo");
 	}
 	println!("{:}", "=".repeat(80));
 }
